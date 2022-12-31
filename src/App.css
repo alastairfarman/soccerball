@@ -1,0 +1,16 @@
+*{
+    margin: 0;
+}
+
+body{
+    height: fit-content;
+}
+
+#root{
+    height: 100dvh;
+    overflow: hidden;
+}
+#soccer{
+    margin: 0;
+    box-sizing: border-box;
+}
