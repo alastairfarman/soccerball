@@ -2,6 +2,11 @@
   margin: 0;
 }
 
+@font-face {
+  font-family: 'BNCringe';
+  src: url(../public/BNCringeScript.otf);
+}
+
 body {
   height: fit-content;
 }
@@ -28,4 +33,6 @@ body {
   top: 10%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-family: 'BNCringe';
+  font-size: 5rem;
 }

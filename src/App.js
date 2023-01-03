@@ -5,6 +5,7 @@ import * as CANNON from "cannon-es";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 import { Group } from "three";
+import { throttle } from "lodash";
 
 function App() {
   const click_ref = useRef(null);
@@ -15,14 +16,14 @@ function App() {
     const canvas = document.getElementById("soccer");
     const scene = new THREE.Scene();
     const ballSize = 10;
-    const arenaWidth = (screenWidth / 100) * 15;
-    console.log('a width: ',arenaWidth)
-    console.log('s width: ', screenWidth)
-    const arenaHeight = (screenHeight / 100) * 15;
-    console.log('a height :',arenaHeight)
-    console.log('s height: ', screenHeight)
+    const arenaWidth = (screenWidth / 100) * 17;
+    console.log("a width: ", arenaWidth);
+    console.log("s width: ", screenWidth);
+    const arenaHeight = (screenHeight / 100) * 17;
+    console.log("a height :", arenaHeight);
+    console.log("s height: ", screenHeight);
 
-    const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40)
+    const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40);
 
     let deviceYRotation = 0;
     let deviceXRotation = 0;
@@ -103,7 +104,7 @@ function App() {
       antialias: true,
     });
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(screenWidth, screenHeight);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.5;
@@ -111,6 +112,17 @@ function App() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     document.getElementById("root").appendChild(renderer.domElement);
+
+    //window resize
+
+    window.addEventListener("resize", onWindowResize());
+
+    function onWindowResize() {
+      console.log("resized");
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
     //physics set up
 
@@ -155,15 +167,11 @@ function App() {
       new CANNON.Quaternion(-0.707, 0, 0, 0.707)
     );
 
-    box.addShape(
-      ceiling,
-      ceilingHeight,
-      new CANNON.Quaternion(0, 1, 0, 0)
-    );
+    box.addShape(ceiling, ceilingHeight, new CANNON.Quaternion(0, 1, 0, 0));
 
     physicsWorld.addBody(box);
 
-      //ball physics
+    //ball physics
 
     const sphereBody = new CANNON.Body({
       mass: 5,
@@ -175,19 +183,19 @@ function App() {
 
     //light
 
-      //shadow caster
+    //shadow caster
 
     const Dlight = new THREE.DirectionalLight(0xffffff, 1);
-    Dlight.position.set(-100, -120, 400);
+    Dlight.position.set(-100, -150, 400);
     Dlight.castShadow = true;
     Dlight.shadow.camera.top = 200;
     Dlight.shadow.camera.bottom = -200;
     Dlight.shadow.camera.right = 200;
     Dlight.shadow.camera.left = -200;
-    Dlight.shadow.mapSize.set(4096, 4096);
+    Dlight.shadow.mapSize.set(4096 * 2, 4096 * 2);
     scene.add(Dlight);
 
-      //fill & reflections HDRI texture
+    //fill & reflections HDRI texture
 
     const hdrTextureURL = new URL(
       "../public/studio_small_03_4k.hdr",
@@ -230,7 +238,10 @@ function App() {
 
     //box graphics
 
-    const arenaGeo = new THREE.PlaneGeometry(arenaWidth, arenaHeight);
+    const arenaGeo = new THREE.PlaneGeometry(
+      arenaWidth + arenaWidth * 0.2,
+      arenaHeight + arenaHeight * 0.2
+    );
     const arenaMaterial = new THREE.MeshStandardMaterial({
       color: "#AAAAAA",
       roughness: "0.5",
@@ -239,7 +250,6 @@ function App() {
       color: "#ffffff",
       roughness: "0.3",
     });
-
 
     const arenaFloor = new THREE.Mesh(arenaGeo, arenaMaterial);
     arenaFloor.receiveShadow = true;
