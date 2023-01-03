@@ -5,7 +5,6 @@ import * as CANNON from "cannon-es";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
 import { Group } from "three";
-import { throttle } from "lodash";
 
 function App() {
   const click_ref = useRef(null);
@@ -25,8 +24,9 @@ function App() {
 
     const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40);
 
-    let deviceYRotation = 0;
-    let deviceXRotation = 0;
+    let deviceBetaRotation = 0;
+    let deviceGammaRotation = 0;
+    let deviceAlphaRotation = 0;
 
     //start function
 
@@ -61,25 +61,34 @@ function App() {
     function detectMotion() {
       "motion detected";
       window.addEventListener("deviceorientation", (event) => {
-        deviceYRotation = event.beta;
-        deviceXRotation = event.gamma;
+        //get gyroscope position and convert deg to rad
+
+        deviceBetaRotation = event.beta * (Math.PI / 180);
+        deviceGammaRotation = event.gamma * (Math.PI / 180);
+        deviceAlphaRotation = event.alpha * (Math.PI / 180);
+
+        //check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence
+
+        function deviceBetaRotationPosNormal() {
+          return normalizeDegScale(convertToPositve(deviceBetaRotation));
+        }
+
+        function convertToPositve(num) {
+          return Math.abs(num);
+        }
+
+        function normalizeDegScale(num) {
+          return num / 90;
+        }
 
         //move box
 
-        box.quaternion.setFromEuler(
-          deviceYRotation * (Math.PI / 180),
-          deviceXRotation * (Math.PI / 180),
-          0
-        );
+        box.quaternion.setFromEuler(deviceBetaRotation, deviceGammaRotation, 0);
 
         //move camera
 
         cameraControl.quaternion.setFromEuler(
-          new THREE.Euler(
-            deviceYRotation * (Math.PI / 180),
-            deviceXRotation * (Math.PI / 180),
-            0
-          )
+          new THREE.Euler(deviceBetaRotation, deviceGammaRotation, 0)
         );
       });
     }
@@ -113,7 +122,7 @@ function App() {
 
     document.getElementById("root").appendChild(renderer.domElement);
 
-    //window resize
+    //window resize not working
 
     window.addEventListener("resize", onWindowResize());
 
