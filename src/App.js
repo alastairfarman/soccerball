@@ -25,6 +25,7 @@ function App() {
     const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40);
 
     let deviceBetaRotation = 0;
+    let deviceBetaRotationDeg = 0;
     let deviceGammaRotation = 0;
     let deviceAlphaRotation = 0;
 
@@ -69,8 +70,12 @@ function App() {
 
         //check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence
 
+        deviceBetaRotationDeg = event.beta;
+
+        const influenceFactor = deviceBetaRotationPosNormal();
+
         function deviceBetaRotationPosNormal() {
-          return normalizeDegScale(convertToPositve(deviceBetaRotation));
+          return normalizeDegScale(convertToPositve(deviceBetaRotationDeg));
         }
 
         function convertToPositve(num) {
@@ -83,12 +88,22 @@ function App() {
 
         //move box
 
-        box.quaternion.setFromEuler(deviceBetaRotation, deviceGammaRotation, 0);
+        console.log("normal", influenceFactor);
+
+        box.quaternion.setFromEuler(
+          deviceBetaRotation,
+          deviceGammaRotation * (1 - influenceFactor),
+          deviceAlphaRotation * influenceFactor
+        );
 
         //move camera
 
         cameraControl.quaternion.setFromEuler(
-          new THREE.Euler(deviceBetaRotation, deviceGammaRotation, 0)
+          new THREE.Euler(
+            deviceBetaRotation,
+            deviceGammaRotation * (1 - influenceFactor),
+            deviceAlphaRotation * influenceFactor
+          )
         );
       });
     }
@@ -219,7 +234,7 @@ function App() {
     //soccerball model (slightly larger than physics)
 
     const ballLoader = new GLTFLoader();
-    const ballURL = "../ball.glb";
+    const ballURL = "../public/ball.glb";
     let loadedBall;
     ballLoader.load(
       ballURL,
