@@ -234,7 +234,7 @@ function App() {
     //soccerball model (slightly larger than physics)
 
     const ballLoader = new GLTFLoader();
-    const ballURL = "../public/ball.glb";
+    const ballURL = "./ball.glb";
     let loadedBall;
     ballLoader.load(
       ballURL,

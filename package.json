@@ -2,7 +2,7 @@
   "name": "soccerball",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "https://alastairfarman.github.io/soccerball/",
   "dependencies": {
     "@react-three/drei": "^9.48.5",
     "@react-three/fiber": "^8.9.2",
