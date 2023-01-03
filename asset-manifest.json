@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "./static/css/main.6d668c90.css",
-    "main.js": "./static/js/main.8539b6af.js",
-    "static/media/studio_small_03_4k.hdr": "./static/media/studio_small_03_4k.fee2b6c455f2d0da19b1.hdr",
-    "static/media/BNCringeScript.otf": "./static/media/BNCringeScript.ccbc51fc4f81417bea9d.otf",
-    "index.html": "./index.html",
-    "main.6d668c90.css.map": "./static/css/main.6d668c90.css.map",
-    "main.8539b6af.js.map": "./static/js/main.8539b6af.js.map"
+    "main.css": "/soccerball/static/css/main.cb24c8a4.css",
+    "main.js": "/soccerball/static/js/main.9ce7c32c.js",
+    "static/media/studio_small_03_4k.hdr": "/soccerball/static/media/studio_small_03_4k.fee2b6c455f2d0da19b1.hdr",
+    "static/media/BNCringeScript.otf": "/soccerball/static/media/BNCringeScript.ccbc51fc4f81417bea9d.otf",
+    "index.html": "/soccerball/index.html",
+    "main.cb24c8a4.css.map": "/soccerball/static/css/main.cb24c8a4.css.map",
+    "main.9ce7c32c.js.map": "/soccerball/static/js/main.9ce7c32c.js.map"
   },
   "entrypoints": [
-    "static/css/main.6d668c90.css",
-    "static/js/main.8539b6af.js"
+    "static/css/main.cb24c8a4.css",
+    "static/js/main.9ce7c32c.js"
   ]
 }
