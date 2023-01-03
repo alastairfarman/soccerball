@@ -1,16 +1,31 @@
-*{
-    margin: 0;
+* {
+  margin: 0;
 }
 
-body{
-    height: fit-content;
+body {
+  height: fit-content;
 }
 
-#root{
-    height: 100dvh;
-    overflow: hidden;
+#root {
+  height: 100dvh;
+  overflow: hidden;
 }
-#soccer{
-    margin: 0;
-    box-sizing: border-box;
+#soccer {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#play-button {
+  position: fixed;
+  bottom: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#title {
+  color: #eb5160;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }

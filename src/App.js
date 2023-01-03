@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import "./App.css";
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { OrbitControls } from "./OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
+import { Group } from "three";
 
 function App() {
+  const click_ref = useRef(null);
+
   useEffect(() => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -14,13 +16,32 @@ function App() {
     const scene = new THREE.Scene();
     const ballSize = 10;
     const arenaWidth = (screenWidth / 100) * 15;
+    console.log('a width: ',arenaWidth)
+    console.log('s width: ', screenWidth)
     const arenaHeight = (screenHeight / 100) * 15;
+    console.log('a height :',arenaHeight)
+    console.log('s height: ', screenHeight)
 
-    // gyroscope
+    const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40)
+
+    let deviceYRotation = 0;
+    let deviceXRotation = 0;
+
+    //start function
+
+    function handleClick() {
+      startMotionDetection();
+      document.getElementById("play-button").style.display = "none";
+    }
+
+    //access useRef function (necessary for iOS permission)
+
+    click_ref.current = handleClick;
 
     function startMotionDetection() {
-      // feature detect
+      console.log("attempting detection");
       if (typeof DeviceMotionEvent.requestPermission === "function") {
+        console.log("IOS device - ask permission");
         DeviceMotionEvent.requestPermission()
           .then((permissionState) => {
             if (permissionState === "granted") {
@@ -31,26 +52,34 @@ function App() {
           })
           .catch(console.error);
       } else {
+        console.log("Not IOS device");
         detectMotion();
       }
     }
-    startMotionDetection();
-
-    let deviceYRotation = 0;
-    let deviceXRotation = 0;
 
     function detectMotion() {
-      // orientation in deg
+      "motion detected";
       window.addEventListener("deviceorientation", (event) => {
         deviceYRotation = event.beta;
         deviceXRotation = event.gamma;
-        // groundBody.quaternion.setFromEuler(
-        //   (deviceYRotation * Math.PI) / 180,
-        //   (deviceXRotation * Math.PI) / 180,
-        //   0
-        // );
-        console.log(group.rotation);
-        group.rotation.x = 0.3;
+
+        //move box
+
+        box.quaternion.setFromEuler(
+          deviceYRotation * (Math.PI / 180),
+          deviceXRotation * (Math.PI / 180),
+          0
+        );
+
+        //move camera
+
+        cameraControl.quaternion.setFromEuler(
+          new THREE.Euler(
+            deviceYRotation * (Math.PI / 180),
+            deviceXRotation * (Math.PI / 180),
+            0
+          )
+        );
       });
     }
 
@@ -64,6 +93,10 @@ function App() {
     );
 
     camera.position.z = 300;
+
+    const cameraControl = new Group();
+    cameraControl.add(camera);
+    scene.add(cameraControl);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -85,75 +118,67 @@ function App() {
       gravity: new CANNON.Vec3(0, 0, -9.82 * 10),
     });
 
-    const groundBody = new CANNON.Body({
+    const box = new CANNON.Body({
       type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
     });
 
-    const ceilingBody = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-    });
+    const groundBody = new CANNON.Plane();
+    const wallL = new CANNON.Plane();
+    const wallR = new CANNON.Plane();
+    const wallT = new CANNON.Plane();
+    const wallB = new CANNON.Plane();
+    const ceiling = new CANNON.Plane();
 
-    const wallL = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-    });
+    box.addShape(groundBody);
 
-    const wallR = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-    });
+    box.addShape(
+      wallL,
+      new CANNON.Vec3((arenaWidth / 2) * -1, 0, 0),
+      new CANNON.Quaternion(0, 0.707, 0, 0.707)
+    );
 
-    const wallT = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-    });
+    box.addShape(
+      wallR,
+      new CANNON.Vec3(arenaWidth / 2, 0, 0),
+      new CANNON.Quaternion(0, -0.707, 0, 0.707)
+    );
 
-    const wallB = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane(),
-    });
+    box.addShape(
+      wallT,
+      new CANNON.Vec3(0, arenaHeight / 2, 0),
+      new CANNON.Quaternion(0.707, 0, 0, 0.707)
+    );
 
-    ceilingBody.position.set(0, 0, ballSize + 100);
-    ceilingBody.quaternion.setFromEuler(1.5708 * 2, 0, 0);
+    box.addShape(
+      wallB,
+      new CANNON.Vec3(0, (arenaHeight / 2) * -1, 0),
+      new CANNON.Quaternion(-0.707, 0, 0, 0.707)
+    );
 
-    wallL.quaternion.setFromEuler(0, 1.5708, 0);
-    wallL.position.set((arenaWidth / 2) * -1, 0, 0);
+    box.addShape(
+      ceiling,
+      ceilingHeight,
+      new CANNON.Quaternion(0, 1, 0, 0)
+    );
 
-    wallR.quaternion.setFromEuler(0, -1.5708, 0);
-    wallR.position.set(arenaWidth / 2, 0, 0);
+    physicsWorld.addBody(box);
 
-    wallT.quaternion.setFromEuler(1.5708, 0, 0);
-    wallT.position.set(0, arenaHeight / 2, 0);
-
-    wallB.quaternion.setFromEuler(-1.5708, 0, 0);
-    wallB.position.set(0, (arenaHeight / 2) * -1, 0);
-
-    physicsWorld.addBody(groundBody);
-    physicsWorld.addBody(wallL);
-    physicsWorld.addBody(wallR);
-    physicsWorld.addBody(wallT);
-    physicsWorld.addBody(wallB);
-    physicsWorld.addBody(ceilingBody);
-
-    const group = new THREE.Group();
-    group.add(groundBody);
-    group.add(wallL);
-
-    scene.add(group);
+      //ball physics
 
     const sphereBody = new CANNON.Body({
       mass: 5,
       shape: new CANNON.Sphere(ballSize),
     });
-    sphereBody.position.set(0, 0, ballSize + 100);
+
+    sphereBody.position.set(0, 0, ballSize + 10);
     physicsWorld.addBody(sphereBody);
 
     //light
 
+      //shadow caster
+
     const Dlight = new THREE.DirectionalLight(0xffffff, 1);
-    Dlight.position.set(-100, 120, 300);
+    Dlight.position.set(-100, -120, 400);
     Dlight.castShadow = true;
     Dlight.shadow.camera.top = 200;
     Dlight.shadow.camera.bottom = -200;
@@ -161,6 +186,8 @@ function App() {
     Dlight.shadow.camera.left = -200;
     Dlight.shadow.mapSize.set(4096, 4096);
     scene.add(Dlight);
+
+      //fill & reflections HDRI texture
 
     const hdrTextureURL = new URL(
       "../public/studio_small_03_4k.hdr",
@@ -172,11 +199,7 @@ function App() {
       scene.environment = texture;
     });
 
-    //temp camera
-
-    const orbit = new OrbitControls(camera, renderer.domElement);
-
-    //sphere
+    //soccerball model (slightly larger than physics)
 
     const ballLoader = new GLTFLoader();
     const ballURL = "../ball.glb";
@@ -186,7 +209,7 @@ function App() {
       function (gltf) {
         loadedBall = gltf;
         scene.add(gltf.scene);
-        gltf.scene.scale.set(100, 100, 100);
+        gltf.scene.scale.set(95, 95, 95);
       },
       undefined,
       function (error) {
@@ -194,14 +217,18 @@ function App() {
       }
     );
 
+    //fallback sphere (matches physics geo)
+
     const sphereGeo = new THREE.SphereGeometry(ballSize, 128, 128);
     const sphereMaterial = new THREE.MeshStandardMaterial({
-      color: "#006f83",
+      color: "#ffffff",
       roughness: "1",
     });
     const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
     sphere.castShadow = true;
     scene.add(sphere);
+
+    //box graphics
 
     const arenaGeo = new THREE.PlaneGeometry(arenaWidth, arenaHeight);
     const arenaMaterial = new THREE.MeshStandardMaterial({
@@ -213,6 +240,7 @@ function App() {
       roughness: "0.3",
     });
 
+
     const arenaFloor = new THREE.Mesh(arenaGeo, arenaMaterial);
     arenaFloor.receiveShadow = true;
     const arenaWallTop = new THREE.Mesh(arenaGeo, arenaMaterialWall);
@@ -221,32 +249,18 @@ function App() {
     const arenaWallRight = new THREE.Mesh(arenaGeo, arenaMaterialWall);
 
     scene.add(arenaFloor);
-    scene.add(arenaWallTop);
-    scene.add(arenaWallBottom);
-    scene.add(arenaWallLeft);
-    scene.add(arenaWallRight);
+    // scene.add(arenaWallTop);
+    // scene.add(arenaWallBottom);
+    // scene.add(arenaWallLeft);
+    // scene.add(arenaWallRight);
 
-    // arenaWallTop.position.y = arenaHeight / 2;
-    // arenaWallTop.position.z = arenaHeight / 2;
-    // arenaWallTop.rotation.x = 1.5708;
-
-    // arenaWallBottom.position.y = (arenaHeight / 2) * -1;
-    // arenaWallBottom.position.z = (arenaHeight / 2) * 1;
-    // arenaWallBottom.rotation.x = 1.5708 * -1;
-
-    // arenaWallLeft.position.x = (arenaWidth / 2) * -1;
-    // arenaWallLeft.position.z = arenaWidth / 2;
-    // arenaWallLeft.rotation.y = 1.5708;
-
-    // arenaWallRight.position.x = arenaWidth / 2;
-    // arenaWallRight.position.z = arenaWidth / 2;
-    // arenaWallRight.rotation.y = 1.5708 * -1;
-
-    //animate
+    // animate (runs physics)
 
     const animate = () => {
       renderer.render(scene, camera);
       physicsWorld.fixedStep();
+
+      //pair graphics to physics
 
       if (loadedBall) {
         loadedBall.scene.position.copy(sphereBody.position);
@@ -255,15 +269,15 @@ function App() {
 
       sphere.position.copy(sphereBody.position);
       sphere.quaternion.copy(sphereBody.quaternion);
-      arenaFloor.quaternion.copy(groundBody.quaternion);
-      arenaWallLeft.position.copy(wallL.position);
-      arenaWallLeft.quaternion.copy(wallL.quaternion);
-      arenaWallRight.position.copy(wallR.position);
-      arenaWallRight.quaternion.copy(wallR.quaternion);
-      arenaWallTop.position.copy(wallT.position);
-      arenaWallTop.quaternion.copy(wallT.quaternion);
-      arenaWallBottom.position.copy(wallB.position);
-      arenaWallBottom.quaternion.copy(wallB.quaternion);
+      arenaFloor.quaternion.copy(box.quaternion);
+      // arenaWallLeft.position.copy(wallL.position);
+      // arenaWallLeft.quaternion.copy(wallL.quaternion);
+      // arenaWallRight.position.copy(wallR.position);
+      // arenaWallRight.quaternion.copy(wallR.quaternion);
+      // arenaWallTop.position.copy(wallT.position);
+      // arenaWallTop.quaternion.copy(wallT.quaternion);
+      // arenaWallBottom.position.copy(wallB.position);
+      // arenaWallBottom.quaternion.copy(wallB.quaternion);
 
       window.requestAnimationFrame(animate);
     };
@@ -272,7 +286,11 @@ function App() {
 
   return (
     <>
+      <h1 id="title">Soccerball</h1>
       <canvas id="soccer"></canvas>
+      <button id="play-button" onClick={() => click_ref.current()}>
+        Play
+      </button>
     </>
   );
 }
