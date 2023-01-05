@@ -25,7 +25,7 @@ function App() {
     const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40);
 
     let deviceBetaRotation = 0;
-    let deviceBetaRotationDeg = 0;
+    // let deviceBetaRotationDeg = 0;
     let deviceGammaRotation = 0;
     let deviceAlphaRotation = 0;
 
@@ -40,13 +40,16 @@ function App() {
 
     click_ref.current = handleClick;
 
+    // Device motion functions
+
     function startMotionDetection() {
-      console.log("attempting detection");
+      console.log("Checking for iOS device");
       if (typeof DeviceMotionEvent.requestPermission === "function") {
-        console.log("IOS device - ask permission");
+        console.log("iOS device - ask permission");
         DeviceMotionEvent.requestPermission()
           .then((permissionState) => {
             if (permissionState === "granted") {
+              //can i remove this event listener to improve iOS performance
               window.addEventListener("devicemotion", () => {
                 detectMotion();
               });
@@ -54,58 +57,91 @@ function App() {
           })
           .catch(console.error);
       } else {
-        console.log("Not IOS device");
+        console.log("Not iOS device, no permission necessary");
         detectMotion();
       }
     }
 
+    function throttle(callback, interval) {
+      let enableCall = true;
+
+      return function (...args) {
+        if (!enableCall) return;
+
+        enableCall = false;
+        callback.apply(this, args);
+        setTimeout(() => (enableCall = true), interval);
+      };
+    }
+
     function detectMotion() {
-      "motion detected";
-      window.addEventListener("deviceorientation", (event) => {
-        //get gyroscope position and convert deg to rad
+      "Attempting to detect motion";
+      window.addEventListener(
+        "deviceorientation",
+        throttle(updateSceneOrientation, 300)
+      );
+    }
 
-        deviceBetaRotation = event.beta * (Math.PI / 180);
-        deviceGammaRotation = event.gamma * (Math.PI / 180);
-        deviceAlphaRotation = event.alpha * (Math.PI / 180);
+    function updateSceneOrientation(event) {
+      //get gyroscope position and convert deg to rad
 
-        //check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence
+      deviceBetaRotation = event.beta * (Math.PI / 180);
+      deviceGammaRotation = event.gamma * (Math.PI / 180);
+      deviceAlphaRotation = event.alpha * (Math.PI / 180);
 
-        deviceBetaRotationDeg = event.beta;
+      //////check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence - didn't work as intended and not neccessary
 
-        const influenceFactor = deviceBetaRotationPosNormal();
+      // deviceBetaRotationDeg = event.beta;
 
-        function deviceBetaRotationPosNormal() {
-          return normalizeDegScale(convertToPositve(deviceBetaRotationDeg));
-        }
+      // const influenceFactor = deviceBetaRotationPosNormal();
 
-        function convertToPositve(num) {
-          return Math.abs(num);
-        }
+      // function deviceBetaRotationPosNormal() {
+      //   return normalizeDegScale(convertToPositve(deviceBetaRotationDeg));
+      // }
 
-        function normalizeDegScale(num) {
-          return num / 90;
-        }
+      // function convertToPositve(num) {
+      //   return Math.abs(num);
+      // }
 
-        //move box
+      // function normalizeDegScale(num) {
+      //   return num / 90;
+      // }
 
-        console.log("normal", influenceFactor);
+      //move box
 
-        box.quaternion.setFromEuler(
+      // box.quaternion.setFromEuler(
+      //   deviceBetaRotation,
+      //   deviceGammaRotation * (1 - influenceFactor),
+      //   deviceAlphaRotation * influenceFactor
+      // );
+
+      // //move camera
+
+      // cameraControl.quaternion.setFromEuler(
+      //   new THREE.Euler(
+      //     deviceBetaRotation,
+      //     deviceGammaRotation * (1 - influenceFactor),
+      //     deviceAlphaRotation * influenceFactor
+      //   )
+      // );
+
+      /////////// simple fix
+
+      box.quaternion.setFromEuler(
+        deviceBetaRotation,
+        deviceGammaRotation,
+        deviceAlphaRotation
+      );
+
+      //move camera
+
+      cameraControl.quaternion.setFromEuler(
+        new THREE.Euler(
           deviceBetaRotation,
-          deviceGammaRotation * (1 - influenceFactor),
-          deviceAlphaRotation * influenceFactor
-        );
-
-        //move camera
-
-        cameraControl.quaternion.setFromEuler(
-          new THREE.Euler(
-            deviceBetaRotation,
-            deviceGammaRotation * (1 - influenceFactor),
-            deviceAlphaRotation * influenceFactor
-          )
-        );
-      });
+          deviceGammaRotation,
+          deviceAlphaRotation
+        )
+      );
     }
 
     //camera and render set up
@@ -139,23 +175,37 @@ function App() {
 
     //window resize not working
 
-    window.addEventListener("resize", onWindowResize());
+    // window.addEventListener("resize", onWindowResize());
 
-    function onWindowResize() {
-      console.log("resized");
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+    // function onWindowResize() {
+    //   console.log("resized");
+    //   camera.aspect = window.innerWidth / window.innerHeight;
+    //   camera.updateProjectionMatrix();
+    //   renderer.setSize(window.innerWidth, window.innerHeight);
+    // }
 
     //physics set up
 
     const physicsWorld = new CANNON.World({
-      gravity: new CANNON.Vec3(0, 0, -9.82 * 10),
+      gravity: new CANNON.Vec3(0, 0, -9.82 * 30),
     });
+
+    const spherePhysMat = new CANNON.Material();
+    const groundPhysMat = new CANNON.Material();
+
+    // ball bounciness
+
+    const groundContactMat = new CANNON.ContactMaterial(
+      groundPhysMat,
+      spherePhysMat,
+      { restitution: 0.5 }
+    );
+
+    physicsWorld.addContactMaterial(groundContactMat);
 
     const box = new CANNON.Body({
       type: CANNON.Body.STATIC,
+      material: groundPhysMat,
     });
 
     const groundBody = new CANNON.Plane();
@@ -195,11 +245,10 @@ function App() {
 
     physicsWorld.addBody(box);
 
-    //ball physics
-
     const sphereBody = new CANNON.Body({
-      mass: 5,
+      mass: 200,
       shape: new CANNON.Sphere(ballSize),
+      material: spherePhysMat,
     });
 
     sphereBody.position.set(0, 0, ballSize + 10);
@@ -210,13 +259,14 @@ function App() {
     //shadow caster
 
     const Dlight = new THREE.DirectionalLight(0xffffff, 1);
-    Dlight.position.set(-100, -150, 400);
+    Dlight.position.set(-100, -150, 300);
     Dlight.castShadow = true;
     Dlight.shadow.camera.top = 200;
     Dlight.shadow.camera.bottom = -200;
     Dlight.shadow.camera.right = 200;
     Dlight.shadow.camera.left = -200;
     Dlight.shadow.mapSize.set(4096 * 2, 4096 * 2);
+
     scene.add(Dlight);
 
     //fill & reflections HDRI texture
@@ -249,7 +299,7 @@ function App() {
       }
     );
 
-    //fallback sphere (matches physics geo)
+    //fallback sphere if model load fails (matches physics geo)
 
     const sphereGeo = new THREE.SphereGeometry(ballSize, 128, 128);
     const sphereMaterial = new THREE.MeshStandardMaterial({
@@ -263,30 +313,18 @@ function App() {
     //box graphics
 
     const arenaGeo = new THREE.PlaneGeometry(
-      arenaWidth + arenaWidth * 0.2,
-      arenaHeight + arenaHeight * 0.2
+      arenaWidth + arenaWidth * 0.5,
+      arenaHeight + arenaHeight * 0.5
     );
     const arenaMaterial = new THREE.MeshStandardMaterial({
       color: "#AAAAAA",
       roughness: "0.5",
     });
-    const arenaMaterialWall = new THREE.MeshStandardMaterial({
-      color: "#ffffff",
-      roughness: "0.3",
-    });
 
     const arenaFloor = new THREE.Mesh(arenaGeo, arenaMaterial);
     arenaFloor.receiveShadow = true;
-    const arenaWallTop = new THREE.Mesh(arenaGeo, arenaMaterialWall);
-    const arenaWallBottom = new THREE.Mesh(arenaGeo, arenaMaterialWall);
-    const arenaWallLeft = new THREE.Mesh(arenaGeo, arenaMaterialWall);
-    const arenaWallRight = new THREE.Mesh(arenaGeo, arenaMaterialWall);
 
     scene.add(arenaFloor);
-    // scene.add(arenaWallTop);
-    // scene.add(arenaWallBottom);
-    // scene.add(arenaWallLeft);
-    // scene.add(arenaWallRight);
 
     // animate (runs physics)
 
