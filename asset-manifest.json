@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/soccerball/static/css/main.cc97c5a4.css",
-    "main.js": "/soccerball/static/js/main.13c7fa29.js",
+    "main.css": "/soccerball/static/css/main.4d192257.css",
+    "main.js": "/soccerball/static/js/main.bc6a4ecb.js",
     "static/media/studio_small_03_4k.hdr": "/soccerball/static/media/studio_small_03_4k.fee2b6c455f2d0da19b1.hdr",
     "static/media/BNCringeScript.otf": "/soccerball/static/media/BNCringeScript.ccbc51fc4f81417bea9d.otf",
     "index.html": "/soccerball/index.html",
-    "main.cc97c5a4.css.map": "/soccerball/static/css/main.cc97c5a4.css.map",
-    "main.13c7fa29.js.map": "/soccerball/static/js/main.13c7fa29.js.map"
+    "main.4d192257.css.map": "/soccerball/static/css/main.4d192257.css.map",
+    "main.bc6a4ecb.js.map": "/soccerball/static/js/main.bc6a4ecb.js.map"
   },
   "entrypoints": [
-    "static/css/main.cc97c5a4.css",
-    "static/js/main.13c7fa29.js"
+    "static/css/main.4d192257.css",
+    "static/js/main.bc6a4ecb.js"
   ]
 }
