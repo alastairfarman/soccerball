@@ -164,7 +164,9 @@ function App() {
       antialias: true,
     });
 
-    renderer.setSize(screenWidth, screenHeight);
+    renderer.setSize(screenWidth, screenHeight, false);
+    console.log("device pixel ratio", window.devicePixelRatio);
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.5;
@@ -172,17 +174,6 @@ function App() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     document.getElementById("root").appendChild(renderer.domElement);
-
-    //window resize not working
-
-    // window.addEventListener("resize", onWindowResize());
-
-    // function onWindowResize() {
-    //   console.log("resized");
-    //   camera.aspect = window.innerWidth / window.innerHeight;
-    //   camera.updateProjectionMatrix();
-    //   renderer.setSize(window.innerWidth, window.innerHeight);
-    // }
 
     //physics set up
 
