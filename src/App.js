@@ -78,11 +78,12 @@ function App() {
       "Attempting to detect motion";
       window.addEventListener(
         "deviceorientation",
-        throttle(updateSceneOrientation, 300)
+        throttle(updateSceneOrientation, 500)
       );
     }
 
     function updateSceneOrientation(event) {
+      console.log("scene updated");
       //get gyroscope position and convert deg to rad
 
       deviceBetaRotation = event.beta * (Math.PI / 180);
@@ -250,7 +251,7 @@ function App() {
     //shadow caster
 
     const Dlight = new THREE.DirectionalLight(0xffffff, 1);
-    Dlight.position.set(-100, -150, 300);
+    Dlight.position.set(100, 150, 300);
     Dlight.castShadow = true;
     Dlight.shadow.camera.top = 200;
     Dlight.shadow.camera.bottom = -200;
@@ -333,14 +334,6 @@ function App() {
       sphere.position.copy(sphereBody.position);
       sphere.quaternion.copy(sphereBody.quaternion);
       arenaFloor.quaternion.copy(box.quaternion);
-      // arenaWallLeft.position.copy(wallL.position);
-      // arenaWallLeft.quaternion.copy(wallL.quaternion);
-      // arenaWallRight.position.copy(wallR.position);
-      // arenaWallRight.quaternion.copy(wallR.quaternion);
-      // arenaWallTop.position.copy(wallT.position);
-      // arenaWallTop.quaternion.copy(wallT.quaternion);
-      // arenaWallBottom.position.copy(wallB.position);
-      // arenaWallBottom.quaternion.copy(wallB.quaternion);
 
       window.requestAnimationFrame(animate);
     };
