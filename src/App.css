@@ -12,13 +12,14 @@ body {
 }
 
 #root {
-  height: 100dvh;
+  /* height: 100dvh; */
   overflow: hidden;
 }
 #soccer {
   margin: 0;
   box-sizing: border-box;
   width: 100%;
+  overflow: hidden;
 }
 
 #play-button {

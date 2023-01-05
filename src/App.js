@@ -22,7 +22,7 @@ function App() {
     console.log("a height :", arenaHeight);
     console.log("s height: ", screenHeight);
 
-    const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 40);
+    const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 70);
 
     let deviceBetaRotation = 0;
     // let deviceBetaRotationDeg = 0;
@@ -49,7 +49,8 @@ function App() {
         DeviceMotionEvent.requestPermission()
           .then((permissionState) => {
             if (permissionState === "granted") {
-              //can i remove this event listener to improve iOS performance
+              // detectMotion();
+
               window.addEventListener("devicemotion", () => {
                 detectMotion();
               });
@@ -78,7 +79,7 @@ function App() {
       "Attempting to detect motion";
       window.addEventListener(
         "deviceorientation",
-        throttle(updateSceneOrientation, 500)
+        throttle(updateSceneOrientation, 100)
       );
     }
 
@@ -90,7 +91,7 @@ function App() {
       deviceGammaRotation = event.gamma * (Math.PI / 180);
       deviceAlphaRotation = event.alpha * (Math.PI / 180);
 
-      //////check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence - didn't work as intended and not neccessary
+      //////check how vertical device is on 0-1 scale to modify alpha/gamma rotation influence - thought process was to mimic gravitational effect as rolling phone shouldnt make ball move left or right if upright, rotating it should - kinda worked but created some odd physics at 90/180/270/360 angles and as switched 359 to 0. Possibly due to how browers tries to orientate vertically if upside down/landscape? kept code for reference
 
       // deviceBetaRotationDeg = event.beta;
 
@@ -126,7 +127,11 @@ function App() {
       //   )
       // );
 
-      /////////// simple fix
+      // Simpler physics matching all phone rotations with no influence factors
+
+      //can these be or are these computed synchronously? is camera slower as its not a property and has to reference a THREE Euler constructor? is there simpler/faster way to do this
+
+      //move box with device
 
       box.quaternion.setFromEuler(
         deviceBetaRotation,
@@ -134,7 +139,7 @@ function App() {
         deviceAlphaRotation
       );
 
-      //move camera
+      //move camera with device
 
       cameraControl.quaternion.setFromEuler(
         new THREE.Euler(
@@ -305,8 +310,8 @@ function App() {
     //box graphics
 
     const arenaGeo = new THREE.PlaneGeometry(
-      arenaWidth + arenaWidth * 0.5,
-      arenaHeight + arenaHeight * 0.5
+      arenaWidth + arenaWidth * 2,
+      arenaHeight + arenaHeight * 2
     );
     const arenaMaterial = new THREE.MeshStandardMaterial({
       color: "#AAAAAA",
@@ -321,9 +326,6 @@ function App() {
     // animate (runs physics)
 
     const animate = () => {
-      renderer.render(scene, camera);
-      physicsWorld.fixedStep();
-
       //pair graphics to physics
 
       if (loadedBall) {
@@ -334,6 +336,9 @@ function App() {
       sphere.position.copy(sphereBody.position);
       sphere.quaternion.copy(sphereBody.quaternion);
       arenaFloor.quaternion.copy(box.quaternion);
+
+      renderer.render(scene, camera);
+      physicsWorld.fixedStep();
 
       window.requestAnimationFrame(animate);
     };
