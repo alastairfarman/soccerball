@@ -16,11 +16,8 @@ function App() {
     const scene = new THREE.Scene();
     const ballSize = 10;
     const arenaWidth = (screenWidth / 100) * 17;
-    console.log("a width: ", arenaWidth);
-    console.log("s width: ", screenWidth);
+
     const arenaHeight = (screenHeight / 100) * 17;
-    console.log("a height :", arenaHeight);
-    console.log("s height: ", screenHeight);
 
     const ceilingHeight = new CANNON.Vec3(0, 0, ballSize * 2 + 70);
 
@@ -171,7 +168,6 @@ function App() {
     });
 
     renderer.setSize(screenWidth, screenHeight, false);
-    console.log("device pixel ratio", window.devicePixelRatio);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
