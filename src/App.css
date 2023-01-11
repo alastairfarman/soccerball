@@ -7,6 +7,8 @@
   src: url(../public/BNCringeScript.otf);
 }
 
+@import url("https://fonts.googleapis.com/css2?family=Sofia+Sans&display=swap");
+
 body {
   height: fit-content;
 }
@@ -23,8 +25,15 @@ body {
 }
 
 #play-button {
+  border: none;
+  border-radius: 100vw;
+  background-color: white;
+  font-family: "Sofia Sans", sans-serif;
+  font-size: 1.5rem;
+  width: 8rem;
+  padding: 1rem;
   position: fixed;
-  bottom: 25%;
+  bottom: 10%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
